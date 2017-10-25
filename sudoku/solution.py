@@ -3,13 +3,22 @@
 
 # In[671]:
 
+
+# config parameters
+
+import sys
+
+DIAGONAL_ENABLED = True
+DEBUG = False
+
+
 rows = 'ABCDEFGHI'
 cols = '123456789'
 
-DIAGONAL_ENABLED = True
-
 def cross(a, b):
-    return [s+t for s in a for t in b]
+    "Cross product of elements in A and elements in B."
+    return [s + t for s in a for t in b]
+
 
 def diagonal(a, b):
     index = 0
@@ -36,19 +45,19 @@ column_units = [cross(rows, c) for c in cols]
 square_units = [cross(rs, cs) for rs in ('ABC','DEF','GHI') for cs in ('123','456','789')]
 
 diagonal_units = diagonal ('ABCDEFGHI', '123456789')
-print (diagonal_units)
+#print (diagonal_units)
 diagonal_set = set()
 for m in diagonal_units:
     for i in m:
         diagonal_set.add(i)
 diagonal_list = list(diagonal_set) 
-print ("Diagonal list")
-print (diagonal_list)
-print ("Diagonal list \n")
+#print ("Diagonal list")
+#print (diagonal_list)
+#print ("Diagonal list \n")
 
-print ("Diagonal units")
-print (diagonal_units)
-print ("Diagonal units \n")
+#print ("Diagonal units")
+#print (diagonal_units)
+#print ("Diagonal units \n")
 
 unitlist = row_units + column_units + square_units
 
@@ -60,9 +69,9 @@ if DIAGONAL_ENABLED:
 units = dict((s, [u for u in unitlist if s in u]) for s in boxes)
 peers = dict((s, set(sum(units[s],[]))-set([s])) for s in boxes)
 
-e = 'I5'
-print (units[e])
-print (len(units[e]))
+#e = 'I5'
+#print (units[e])
+#print (len(units[e]))
 
 
 # In[672]:
@@ -71,8 +80,8 @@ print (len(units[e]))
 for a_box in boxes:
         for a_peer in peers[a_box]:
             if a_box == a_peer:
-               print ("Fatal error {} {}".format(a_box, a_peer))
-            
+               print ("Fatal error - Diagonal units are not set properly {} {} ".format(a_box, a_peer))
+               sys.exit(1)
 
 
 # In[673]:
@@ -102,8 +111,7 @@ def naked_twins_backend_v2(values, num):
     Returns:
         the values dictionary with the naked twins eliminated from peers.
     """
-    #print ("\n########Before Naked twins ##########\n")
-    #display(values)
+
     # Find all instances of naked twins
     # Eliminate the naked twins as possibilities for their peers
     
@@ -141,9 +149,7 @@ def naked_twins_backend_v2(values, num):
         for a_box in box_positions:
             for d in naked_twins:
                 values[a_box] = values[a_box].replace(d, '')
-                            
-   
-    
+
     return values 
 
 def naked_twins_backend_v1(values, num):
@@ -154,8 +160,7 @@ def naked_twins_backend_v1(values, num):
     Returns:
         the values dictionary with the naked twins eliminated from peers.
     """
-    #print ("\n########Before Naked twins ##########\n")
-    #display(values)
+
     # Find all instances of naked twins
     # Eliminate the naked twins as possibilities for their peers
     for unit in unitlist:
@@ -176,15 +181,9 @@ def naked_twins_backend_v1(values, num):
                         for d in digits:
                             values[a_box] = values[a_box].replace(d, '')
                             
-    #print ("\n########After Naked twins ##########\n")                        
-    #display(values)
-    
+
     return values 
 
-
-def cross(A, B):
-    "Cross product of elements in A and elements in B."
-    pass
 
 def display(values):
     """
@@ -266,7 +265,7 @@ def eliminate_default(values):
 def eliminate(values):
     return eliminate_v1(values)
 
-def only_choice_v2(values):
+def only_choice_v1(values):
     """Finalize all values that are the only choice for a unit.
 
     Go through all the units, and whenever there is a unit with a value
@@ -275,7 +274,6 @@ def only_choice_v2(values):
     Input: Sudoku in dictionary form.
     Output: Resulting Sudoku in dictionary form after filling in only choices.
     """
-    # TODO: Implement only choice strategy here
     for a_box in units:
         # for row_unit, col unit and square_unit
         for a_neighbor_set in units[a_box]: 
@@ -287,14 +285,13 @@ def only_choice_v2(values):
                         temp[v] = [ a_neighbor ]
                     else:
                         temp[v].append(a_neighbor)
-            #print (temp)            
             for v in temp:
                 if len(temp[v]) == 1:
                     values[temp[v][0]] = v
     
     return values
 
-def only_choice_v3(values):
+def only_choice_v2(values):
     
     for unit in unitlist: # [ A1, A2]
         d = {}
@@ -330,155 +327,144 @@ def only_choice_default(values):
         
 
 def only_choice(values):
-    return only_choice_v3(values)
+    return only_choice_v2(values)
 
 def find_zero_length_box(values):
     return len([ box for box in values.keys() if len(values[box]) == 0 ] ) != 0
 
 def reduce_puzzle(values):
-    #orig_values = values.copy()
-    iter_num = 0
+
+    iter_num = 1
+    orig_values = None
+
     while True:
-        #before_num_solved_values = len([ box for box in values.keys() if len(values[box]) == 1 ] )
-        
-        #temp_before_num_solved_values = before_num_solved_values
-        print ("Iteration number {}".format(iter_num))
-        
+        if DEBUG:
+            print ("Iteration number {}".format(iter_num))
         orig_values = values.copy()
-        display(values)
-        
-        temp_values = values.copy()
+
+        if DEBUG:
+            display(values)
+
+        if DEBUG:
+            temp_values = values.copy()
         
         values = eliminate(values)
-        
-        if find_zero_length_box(values):
-            print ("\n Fatal error...zero length values after eliminate \n")
-            display(values)
-            return (-1, values)
-        
-        if temp_values != values:
-            print ("\n After eliminate values \n")
-            display(values)
-            temp_values = values.copy()
-            #temp_before_num_solved_values =  after_num_solved_values
-        
-        #after_num_solved_values = len([ box for box in values.keys() if len(values[box]) == 1 ] )
-        #if temp_before_num_solved_values < after_num_solved_values: # making progress
-        #   print ("\n After eliminate values \n")
-        #   display(values)
-        #   temp_before_num_solved_values =  after_num_solved_values
 
+        if DEBUG:
+            if find_zero_length_box(values):
+                print ("\n Fatal error...zero length values after eliminate \n")
+                display(values)
+                return (-1, values)
+
+            if temp_values != values:
+                print ("\n After eliminate values \n")
+                display(values)
+                temp_values = values.copy()
 
         values = only_choice(values)
-        if find_zero_length_box(values):
-            print ("\n Fatal error...zero length values after only choice \n")
-            display(values)
-            return (-1, values)
-        
-        if temp_values != values:
-            print ("\n After only choice values \n")
-            display(values)
-            temp_values = values.copy()
-        
-        #after_num_solved_values = len([ box for box in values.keys() if len(values[box]) == 1 ] )
-        #if temp_before_num_solved_values < after_num_solved_values: # making progress
-        #   print ("\n After only choice  \n")
-        #   display(values)
-        #   temp_before_num_solved_values =  after_num_solved_values
+
+        if DEBUG:
+            if find_zero_length_box(values):
+                print ("\n Fatal error...zero length values after only choice \n")
+                display(values)
+                return (-1, values)
+
+            if temp_values != values:
+                print ("\n After only choice values \n")
+                display(values)
+                temp_values = values.copy()
 
         values = naked_twins_backend_v2(values, 2)
-        
-        if find_zero_length_box(values):
-            print ("\n Fatal error...zero length values after naked twins \n")
-            display(values)
-            return (-1, values)
-        
-        if temp_values != values:
-            print ("\n After naked twins \n")
-            display(values)
-            temp_values = values.copy()
-        #after_num_solved_values = len([ box for box in values.keys() if len(values[box]) == 1 ] )
-        #if temp_before_num_solved_values < after_num_solved_values: # making progress
-        #   print ("\n After naked twins \n")
-        #   display(values)
-        #   temp_before_num_solved_values =  after_num_solved_values
+
+        if DEBUG:
+            if find_zero_length_box(values):
+                print ("\n Fatal error...zero length values after naked twins \n")
+                display(values)
+                return (-1, values)
+
+            if temp_values != values:
+                print ("\n After naked twins \n")
+                display(values)
+                temp_values = values.copy()
 
 
-        #after_num_solved_values = len([ box for box in values.keys() if len(values[box]) == 1 ] )
         values = naked_twins_backend_v2(values, 3)
-        
-        if find_zero_length_box(values):
-            print ("\n Fatal error...zero length values  after naked trilets\n")
-            display(values)
-            return (-1, values)
-        
-        if temp_values != values:
-            print ("\n After naked triplets \n")
-            display(values)
-            temp_values = values.copy()
-        
-        #if temp_before_num_solved_values < after_num_solved_values: # making progress
-        #   print ("\n After naked triplets \n")
-        #   display(values)
-        #   temp_before_num_solved_values =  after_num_solved_values
+
+        if DEBUG:
+            if find_zero_length_box(values):
+                print ("\n Fatal error...zero length values  after naked triplets\n")
+                display(values)
+                return (-1, values)
+
+            if temp_values != values:
+                print ("\n After naked triplets \n")
+                display(values)
+                temp_values = values.copy()
 
         after_num_solved_values = len([ box for box in values.keys() if len(values[box]) == 1 ] )
         if after_num_solved_values == len(boxes):
             print ("Solution is Reached!!!")
             return (0, values )
             
-        #if before_num_solved_values == after_num_solved_values: # not making progress
-        #   break
         if values == orig_values:
-            print ("\n Not making any progress \n")
+            print ("Not making any progress")
             break
-            
-          
-        print ("##############{}".format(iter_num))
+
+        if DEBUG:
+            print ("##############\n")
         
         iter_num = iter_num + 1
-        #if iter_num > 20:
-        #    print ("\n\nOut of Iteration!!!\n\n")
-        #    break
 
     
-    #print ("Solution is NOT reached ....!!!")
+    print ("Solution is NOT reached ....!!!")
      # Sanity check, return False if there is a box with zero available values:
     if len([box for box in values.keys() if len(values[box]) == 0]):
-        print ("Solution is NOT reached ....!!!")
+        print ("Reason: Fatal Error - Found 0 len boxes ....!!!")
         return (-1, values)
 
+    print ("Reason: Could not reduce further!!!")
     return (-2, values)
     
 
 def naked_twins(values):
-    #orig_values = values.copy()
-    iter_num = 0
+
+    iter_num = 1
     while True:
-        before_num_solved_values = len([ box for box in values.keys() if len(values[box]) == 1 ] )
-        
-        values = naked_twins_backend_v1(values, 2)
+
+        if DEBUG:
+            print ("Iteration number {}".format(iter_num))
+        orig_values = values.copy()
+
+        values = naked_twins_backend_v2(values, 2)
+
+        if DEBUG:
+            if find_zero_length_box(values):
+                print ("\n Fatal error...zero length values  after naked twins\n")
+                display(values)
+                return (-1, values)
+
+            if orig_values != values:
+                print ("\n After naked twins \n")
+                display(values)
         
         after_num_solved_values = len([ box for box in values.keys() if len(values[box]) == 1 ] )
-        
         if after_num_solved_values == len(boxes):
              print ("Solution is Reached!!!")
              break
-            
-        if before_num_solved_values == after_num_solved_values:
-             break
 
-        print ("##############{}".format(iter_num))
-        iter_num = iter_num + 1
-        if iter_num > 20:
-            print ("\n\nOut of Iteration!!!\n\n")
+        if values == orig_values:
+            if DEBUG:
+                print ("Not making any progress for Naked Twins \n")
             break
-            
 
-    if after_num_solved_values == len(boxes):
-        print ("Naked Twins Solution is Reached!!!")
-    else:
-        print ("Naked Twins Solution is NOT reached ....!!!")
+        iter_num = iter_num + 1
+
+    if DEBUG:
+
+        if after_num_solved_values == len(boxes):
+            print ("Naked Twins Solution is Reached!!!")
+        else:
+            print ("Naked Twins Solution is NOT reached ....!!!")
       
         
     return values    
@@ -514,9 +500,10 @@ def search(values):
 
     for value in values[min_length_box_num]:
         new_sudoku = values.copy()
-        print ("Current state of sudoku \n")
+        #print ("Current state of sudoku \n")
         display(values)
-        print ("Trying DFS path with {} single value {} on box = {}".format(value, values[min_length_box_num], min_length_box_num))
+        if DEBUG:
+            print ("Trying DFS path with {} single value {} on box = {}".format(value, values[min_length_box_num], min_length_box_num))
         new_sudoku[min_length_box_num] = value
         (result, new_values) = search(new_sudoku)
         if result != 0:
@@ -539,7 +526,12 @@ def solve(grid):
     #print ("\n######Before Grid values Call#############\n" )
     values = grid_values(grid)
     #print ("\n######After Grid values Call#############\n" )
-    #display(values)
+
+    print ("\n#########Sudoku Problem########\n" )
+
+    display(values)
+
+    print ("\n#########Sudoku Problem########\n")
     
     (result, values) = search(values)
     if result == -2: # search also failed to reduce
@@ -549,95 +541,13 @@ def solve(grid):
         print ("FATAL Error : Search failed to reduce and ended up with 0 len boxes")  
         return values
     
-    print ("Cracked it!!!")
+    print ("\nHurray !!! Cracked Sudoku !!!\n")
+    if __name__ != '__main__':
+        display(values)
     
     return values
     
-    
-
-
-# In[675]:
-
-def test_naked_twins():
-    before_naked_twins_1 = {'I6': '4', 'H9': '3', 'I2': '6', 'E8': '1', 'H3': '5', 'H7': '8', 'I7': '1', 'I4': '8',
-                            'H5': '6', 'F9': '7', 'G7': '6', 'G6': '3', 'G5': '2', 'E1': '8', 'G3': '1', 'G2': '8',
-                            'G1': '7', 'I1': '23', 'C8': '5', 'I3': '23', 'E5': '347', 'I5': '5', 'C9': '1', 'G9': '5',
-                            'G8': '4', 'A1': '1', 'A3': '4', 'A2': '237', 'A5': '9', 'A4': '2357', 'A7': '27',
-                            'A6': '257', 'C3': '8', 'C2': '237', 'C1': '23', 'E6': '579', 'C7': '9', 'C6': '6',
-                            'C5': '37', 'C4': '4', 'I9': '9', 'D8': '8', 'I8': '7', 'E4': '6', 'D9': '6', 'H8': '2',
-                            'F6': '125', 'A9': '8', 'G4': '9', 'A8': '6', 'E7': '345', 'E3': '379', 'F1': '6',
-                            'F2': '4', 'F3': '23', 'F4': '1235', 'F5': '8', 'E2': '37', 'F7': '35', 'F8': '9',
-                            'D2': '1', 'H1': '4', 'H6': '17', 'H2': '9', 'H4': '17', 'D3': '2379', 'B4': '27',
-                            'B5': '1', 'B6': '8', 'B7': '27', 'E9': '2', 'B1': '9', 'B2': '5', 'B3': '6', 'D6': '279',
-                            'D7': '34', 'D4': '237', 'D5': '347', 'B8': '3', 'B9': '4', 'D1': '5'}
-    possible_solutions_1 = [
-        {'G7': '6', 'G6': '3', 'G5': '2', 'G4': '9', 'G3': '1', 'G2': '8', 'G1': '7', 'G9': '5', 'G8': '4', 'C9': '1',
-         'C8': '5', 'C3': '8', 'C2': '237', 'C1': '23', 'C7': '9', 'C6': '6', 'C5': '37', 'A4': '2357', 'A9': '8',
-         'A8': '6', 'F1': '6', 'F2': '4', 'F3': '23', 'F4': '1235', 'F5': '8', 'F6': '125', 'F7': '35', 'F8': '9',
-         'F9': '7', 'B4': '27', 'B5': '1', 'B6': '8', 'B7': '27', 'E9': '2', 'B1': '9', 'B2': '5', 'B3': '6', 'C4': '4',
-         'B8': '3', 'B9': '4', 'I9': '9', 'I8': '7', 'I1': '23', 'I3': '23', 'I2': '6', 'I5': '5', 'I4': '8', 'I7': '1',
-         'I6': '4', 'A1': '1', 'A3': '4', 'A2': '237', 'A5': '9', 'E8': '1', 'A7': '27', 'A6': '257', 'E5': '347',
-         'E4': '6', 'E7': '345', 'E6': '579', 'E1': '8', 'E3': '79', 'E2': '37', 'H8': '2', 'H9': '3', 'H2': '9',
-         'H3': '5', 'H1': '4', 'H6': '17', 'H7': '8', 'H4': '17', 'H5': '6', 'D8': '8', 'D9': '6', 'D6': '279',
-         'D7': '34', 'D4': '237', 'D5': '347', 'D2': '1', 'D3': '79', 'D1': '5'},
-        {'I6': '4', 'H9': '3', 'I2': '6', 'E8': '1', 'H3': '5', 'H7': '8', 'I7': '1', 'I4': '8', 'H5': '6', 'F9': '7',
-         'G7': '6', 'G6': '3', 'G5': '2', 'E1': '8', 'G3': '1', 'G2': '8', 'G1': '7', 'I1': '23', 'C8': '5', 'I3': '23',
-         'E5': '347', 'I5': '5', 'C9': '1', 'G9': '5', 'G8': '4', 'A1': '1', 'A3': '4', 'A2': '237', 'A5': '9',
-         'A4': '2357', 'A7': '27', 'A6': '257', 'C3': '8', 'C2': '237', 'C1': '23', 'E6': '579', 'C7': '9', 'C6': '6',
-         'C5': '37', 'C4': '4', 'I9': '9', 'D8': '8', 'I8': '7', 'E4': '6', 'D9': '6', 'H8': '2', 'F6': '125',
-         'A9': '8', 'G4': '9', 'A8': '6', 'E7': '345', 'E3': '79', 'F1': '6', 'F2': '4', 'F3': '23', 'F4': '1235',
-         'F5': '8', 'E2': '3', 'F7': '35', 'F8': '9', 'D2': '1', 'H1': '4', 'H6': '17', 'H2': '9', 'H4': '17',
-         'D3': '79', 'B4': '27', 'B5': '1', 'B6': '8', 'B7': '27', 'E9': '2', 'B1': '9', 'B2': '5', 'B3': '6',
-         'D6': '279', 'D7': '34', 'D4': '237', 'D5': '347', 'B8': '3', 'B9': '4', 'D1': '5'}
-        ]
-    values = naked_twins(before_naked_twins_1)
-    display(values)
-    if values in possible_solutions_1:
-        print ("Test 1 Pass\n")
-    else:  
-        print ("Test 1 Fail\n")
-        
-    before_naked_twins_2 = {'A1': '23', 'A2': '4', 'A3': '7', 'A4': '6', 'A5': '8', 'A6': '5', 'A7': '23', 'A8': '9',
-                            'A9': '1', 'B1': '6', 'B2': '9', 'B3': '8', 'B4': '4', 'B5': '37', 'B6': '1', 'B7': '237',
-                            'B8': '5', 'B9': '237', 'C1': '23', 'C2': '5', 'C3': '1', 'C4': '23', 'C5': '379',
-                            'C6': '2379', 'C7': '8', 'C8': '6', 'C9': '4', 'D1': '8', 'D2': '17', 'D3': '9',
-                            'D4': '1235', 'D5': '6', 'D6': '237', 'D7': '4', 'D8': '27', 'D9': '2357', 'E1': '5',
-                            'E2': '6', 'E3': '2', 'E4': '8', 'E5': '347', 'E6': '347', 'E7': '37', 'E8': '1', 'E9': '9',
-                            'F1': '4', 'F2': '17', 'F3': '3', 'F4': '125', 'F5': '579', 'F6': '279', 'F7': '6',
-                            'F8': '8', 'F9': '257', 'G1': '1', 'G2': '8', 'G3': '6', 'G4': '35', 'G5': '345',
-                            'G6': '34', 'G7': '9', 'G8': '27', 'G9': '27', 'H1': '7', 'H2': '2', 'H3': '4', 'H4': '9',
-                            'H5': '1', 'H6': '8', 'H7': '5', 'H8': '3', 'H9': '6', 'I1': '9', 'I2': '3', 'I3': '5',
-                            'I4': '7', 'I5': '2', 'I6': '6', 'I7': '1', 'I8': '4', 'I9': '8'}
-    possible_solutions_2 = [
-        {'A1': '23', 'A2': '4', 'A3': '7', 'A4': '6', 'A5': '8', 'A6': '5', 'A7': '23', 'A8': '9', 'A9': '1', 'B1': '6',
-         'B2': '9', 'B3': '8', 'B4': '4', 'B5': '37', 'B6': '1', 'B7': '237', 'B8': '5', 'B9': '237', 'C1': '23',
-         'C2': '5', 'C3': '1', 'C4': '23', 'C5': '79', 'C6': '79', 'C7': '8', 'C8': '6', 'C9': '4', 'D1': '8',
-         'D2': '17', 'D3': '9', 'D4': '1235', 'D5': '6', 'D6': '237', 'D7': '4', 'D8': '27', 'D9': '2357', 'E1': '5',
-         'E2': '6', 'E3': '2', 'E4': '8', 'E5': '347', 'E6': '347', 'E7': '37', 'E8': '1', 'E9': '9', 'F1': '4',
-         'F2': '17', 'F3': '3', 'F4': '125', 'F5': '579', 'F6': '279', 'F7': '6', 'F8': '8', 'F9': '257', 'G1': '1',
-         'G2': '8', 'G3': '6', 'G4': '35', 'G5': '345', 'G6': '34', 'G7': '9', 'G8': '27', 'G9': '27', 'H1': '7',
-         'H2': '2', 'H3': '4', 'H4': '9', 'H5': '1', 'H6': '8', 'H7': '5', 'H8': '3', 'H9': '6', 'I1': '9', 'I2': '3',
-         'I3': '5', 'I4': '7', 'I5': '2', 'I6': '6', 'I7': '1', 'I8': '4', 'I9': '8'},
-        {'A1': '23', 'A2': '4', 'A3': '7', 'A4': '6', 'A5': '8', 'A6': '5', 'A7': '23', 'A8': '9', 'A9': '1', 'B1': '6',
-         'B2': '9', 'B3': '8', 'B4': '4', 'B5': '3', 'B6': '1', 'B7': '237', 'B8': '5', 'B9': '237', 'C1': '23',
-         'C2': '5', 'C3': '1', 'C4': '23', 'C5': '79', 'C6': '79', 'C7': '8', 'C8': '6', 'C9': '4', 'D1': '8',
-         'D2': '17', 'D3': '9', 'D4': '1235', 'D5': '6', 'D6': '237', 'D7': '4', 'D8': '27', 'D9': '2357', 'E1': '5',
-         'E2': '6', 'E3': '2', 'E4': '8', 'E5': '347', 'E6': '347', 'E7': '37', 'E8': '1', 'E9': '9', 'F1': '4',
-         'F2': '17', 'F3': '3', 'F4': '125', 'F5': '579', 'F6': '279', 'F7': '6', 'F8': '8', 'F9': '257', 'G1': '1',
-         'G2': '8', 'G3': '6', 'G4': '35', 'G5': '345', 'G6': '34', 'G7': '9', 'G8': '27', 'G9': '27', 'H1': '7',
-         'H2': '2', 'H3': '4', 'H4': '9', 'H5': '1', 'H6': '8', 'H7': '5', 'H8': '3', 'H9': '6', 'I1': '9', 'I2': '3',
-         'I3': '5', 'I4': '7', 'I5': '2', 'I6': '6', 'I7': '1', 'I8': '4', 'I9': '8'}
-    ] 
-    values = naked_twins(before_naked_twins_2)
-    display(values)
-    if values in possible_solutions_2:
-        print ("Test 2 Pass\n")
-    else:  
-        print ("Test 2 Fail\n")
-    
-
-
-# In[676]:
+    # In[676]:
 
 if __name__ == '__main__':
     #diag_sudoku_grid = "..3.2.6..9..3.5..1..18.64....81.29..7.......8..67.82....26.95..8..2.3..9..5.1.3.."
@@ -655,34 +565,11 @@ if __name__ == '__main__':
     #diagonal_grid  = '.5.......6.3..24...7.1....38.4.....7.........3.....2.97....1.2...96..7.1.......4.'
     
     #if DIAGONAL_ENABLED :
-    #diag_sudoku_grid = '2.............62....1....7...6..8...3...9...7...6..4...4....8....52.............3'
+    diag_sudoku_grid = '2.............62....1....7...6..8...3...9...7...6..4...4....8....52.............3'
+    solution = solve(diag_sudoku_grid)
+    display(solution)
     
-    
-    test_naked_twins()
-    
-    #solution = solve(diag_sudoku_grid)
-    #display(solution)
-    
-    #if True:
-    if False :
-        
-        solved_diag_sudoku = {'G7': '8', 'G6': '9', 'G5': '7', 'G4': '3', 'G3': '2', 'G2': '4', 'G1': '6', 'G9': '5',
-                              'G8': '1', 'C9': '6', 'C8': '7', 'C3': '1', 'C2': '9', 'C1': '4', 'C7': '5', 'C6': '3',
-                              'C5': '2', 'C4': '8', 'E5': '9', 'E4': '1', 'F1': '1', 'F2': '2', 'F3': '9', 'F4': '6',
-                              'F5': '5', 'F6': '7', 'F7': '4', 'F8': '3', 'F9': '8', 'B4': '7', 'B5': '1', 'B6': '6',
-                              'B7': '2', 'B1': '8', 'B2': '5', 'B3': '3', 'B8': '4', 'B9': '9', 'I9': '3', 'I8': '2',
-                              'I1': '7', 'I3': '8', 'I2': '1', 'I5': '6', 'I4': '5', 'I7': '9', 'I6': '4', 'A1': '2',
-                              'A3': '7', 'A2': '6', 'E9': '7', 'A4': '9', 'A7': '3', 'A6': '5', 'A9': '1', 'A8': '8',
-                              'E7': '6', 'E6': '2', 'E1': '3', 'E3': '4', 'E2': '8', 'E8': '5', 'A5': '4', 'H8': '6',
-                              'H9': '4', 'H2': '3', 'H3': '5', 'H1': '9', 'H6': '1', 'H7': '7', 'H4': '2', 'H5': '8',
-                              'D8': '9', 'D9': '2', 'D6': '8', 'D7': '1', 'D4': '4', 'D5': '3', 'D2': '7', 'D3': '6',
-                              'D1': '5'}
 
-        if solution == solved_diag_sudoku:
-            print ("Diagonal Sudoku solved ........\n")
-        else:
-            print ("Diagonal Sudoku NOT solved ........\n")
-    '''Tru
     try:
         from visualize import visualize_assignments
         visualize_assignments(assignments)
@@ -691,22 +578,5 @@ if __name__ == '__main__':
         pass
     except:
         print('We could not visualize your board due to a pygame issue. Not a problem! It is not a requirement.')
-    '''    
 
-
-# In[677]:
-
-y  = []
-z = []
-xxx = { '123' : [ 'A2', 'A3'] , '456' : [ 'A4', 'A5' ] }
-
-
-# In[678]:
-
-xxx.items()
-
-
-# In[679]:
-
-z.append([ki for i in xxx for ki in i ])
 
