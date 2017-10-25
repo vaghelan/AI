@@ -1,6 +1,5 @@
 # coding: utf-8
 
-# In[671]:
 
 import sys
 
@@ -71,7 +70,6 @@ peers = dict((s, set(sum(units[s], [])) - set([s])) for s in boxes)
 # print (len(units[e]))
 
 
-# In[672]:
 
 # print (units)
 for a_box in boxes:
@@ -80,7 +78,6 @@ for a_box in boxes:
             print ("Fatal error - Diagonal units are not set properly {} {} ".format(a_box, a_peer))
             sys.exit(1)
 
-# In[673]:
 
 assignments = []
 
@@ -514,7 +511,6 @@ def search(values):
 
 
 
-        # In[674]:
 
 
 def solve(grid):
@@ -550,7 +546,6 @@ def solve(grid):
 
     return values
 
-    # In[676]:
 
 
 if __name__ == '__main__':
